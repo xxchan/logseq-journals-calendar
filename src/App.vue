@@ -8,6 +8,7 @@
           v-if="ready"
           ref="calendar"
           :onDayclick="_onDaySelect"
+          :onWeeknumberclick="_onWeekSelect"
           @update:to-page="_onToPage"
           v-bind="opts"/>
       </Transition>
@@ -225,7 +226,7 @@ export default {
       })
     },
 
-    async _onDaySelect ({ event, id }) {
+    async _onDaySelect({ event, id }) {
       this.date = id
 
       let t = id
@@ -249,20 +250,16 @@ export default {
         logseq.hideMainUI()
       }
 
-      if (event.shiftKey) {
-        let page = await logseq.Editor.getPage(t)
-        if (page == null) {
-          // Journal entry does not exist. Create it.
-          page = await logseq.Editor.createPage(t, {}, {
-            journal: true,
-            redirect: false,
-          })
-        }
-        logseq.Editor.openInRightSidebar(page.uuid)
-      } else {
-        logseq.App.pushState('page', { name: t })
-      }
+      await openPage(t, event.shiftKey)
     },
+
+    async _onWeekSelect ({ event, weeknumber }) {
+      // TODO: custom format
+      // TODO: may need to consider the first day of the week (e.g., ISO week number)
+      // TODO: show hover effect
+      const t = `2023 Week ${weeknumber}`
+      await openPage(t, event.shiftKey)
+    }
   },
 
   computed: {
@@ -280,5 +277,22 @@ export default {
     logseq.off('settings:changed')
     document.removeEventListener('keydown', this._closeHandle)
   },
+}
+
+// create a new page if it doesn't exist
+async function openPage(name, openInRightSidebar) {
+  if (openInRightSidebar) {
+    let page = await logseq.Editor.getPage(name)
+    if (page == null) {
+      // Journal entry does not exist. Create it.
+      page = await logseq.Editor.createPage(t, {}, {
+        journal: true,
+        redirect: false,
+      })
+    }
+    logseq.Editor.openInRightSidebar(page.uuid)
+  } else {
+    logseq.App.pushState('page', { name })
+  }
 }
 </script>
