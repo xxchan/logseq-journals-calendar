@@ -1,16 +1,9 @@
 <template>
-  <div class="calendar-wrap"
-       @click="_onClickOutside"
-  >
+  <div class="calendar-wrap" @click="_onClickOutside">
     <div class="calendar-inner">
       <Transition name="fade">
-        <v-calendar
-          v-if="ready"
-          ref="calendar"
-          :onDayclick="_onDaySelect"
-          :onWeeknumberclick="_onWeekSelect"
-          @update:to-page="_onToPage"
-          v-bind="opts"/>
+        <v-calendar v-if="ready" ref="calendar" :onDayclick="_onDaySelect" :onWeeknumberclick="_onWeekSelect"
+          @update:to-page="_onToPage" v-bind="opts" />
       </Transition>
     </div>
   </div>
@@ -20,7 +13,7 @@
 import kebabCase from 'lodash.kebabcase'
 import dayjs from 'dayjs/esm/index'
 
-function createSetterContainerStyle (mode) {
+function createSetterContainerStyle(mode) {
   let containerStyle = null
 
   return (k, v, ...args) => {
@@ -39,7 +32,7 @@ const setDarkContainerStyle = createSetterContainerStyle('dark')
 export default {
   name: 'App',
 
-  data () {
+  data() {
     const d = new Date()
     const {
       props, firstDayOfWeek,
@@ -84,7 +77,7 @@ export default {
     }
   },
 
-  mounted () {
+  mounted() {
     logseq.App.onThemeModeChanged(({ mode }) => {
       this.opts[`is-dark`] = mode === 'dark'
     })
@@ -146,13 +139,13 @@ export default {
   },
 
   methods: {
-    _closeHandle (e) {
+    _closeHandle(e) {
       if (e.which === 27) {
         logseq.hideMainUI()
       }
     },
 
-    async _refreshUserConfigs () {
+    async _refreshUserConfigs() {
       const configs = await logseq.App.getUserConfigs()
 
       if (configs.preferredDateFormat) {
@@ -166,7 +159,7 @@ export default {
       }
     },
 
-    async _updateCalendarInMonth () {
+    async _updateCalendarInMonth() {
       const journals = await this._getCurrentRepoRangeJournals()
 
       this.journals = journals.reduce((ac, it) => {
@@ -192,11 +185,11 @@ export default {
       this.opts.attributes = [...this.opts.attributes]
     },
 
-    _onToPage (e) {
+    _onToPage(e) {
       this.mDate = e
     },
 
-    async _getCurrentRepoRangeJournals () {
+    async _getCurrentRepoRangeJournals() {
       const { month, year } = this.mDate
       const my = year + (month < 10 ? '0' : '') + month
 
@@ -218,7 +211,7 @@ export default {
       return (ret || []).flat()
     },
 
-    _onClickOutside ({ target }) {
+    _onClickOutside({ target }) {
       const inner = target.closest('.calendar-inner')
 
       !inner && logseq.hideMainUI({
@@ -253,17 +246,18 @@ export default {
       await openPage(t, event.shiftKey)
     },
 
-    async _onWeekSelect ({ event, weeknumber }) {
+    async _onWeekSelect({ event, weeknumber, days }) {
       // TODO: custom format
       // TODO: may need to consider the first day of the week (e.g., ISO week number)
       // TODO: show hover effect
-      const t = `2023 Week ${weeknumber}`
+      const year = days[6].year
+      const t = `${year} Week ${weeknumber}`
       await openPage(t, event.shiftKey)
     }
   },
 
   computed: {
-    currentBgColor () {
+    currentBgColor() {
       if (this.opts[`is-dark`]) {
         return this.bgColor.dark
       } else {
@@ -272,7 +266,7 @@ export default {
     },
   },
 
-  beforeUnmount () {
+  beforeUnmount() {
     logseq.off('ui:visible:changed')
     logseq.off('settings:changed')
     document.removeEventListener('keydown', this._closeHandle)
